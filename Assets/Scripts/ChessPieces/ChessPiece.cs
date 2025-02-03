@@ -17,6 +17,7 @@ public class ChessPiece : MonoBehaviour
     public int team;
     public int currentX;
     public int currentY;
+    public MeshRenderer mesh;
     public ChessPieceType type;
 
     public Vector3 desiredPosition;
