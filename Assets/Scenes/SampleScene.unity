@@ -464,9 +464,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   tileMaterial: {fileID: 2100000, guid: 0fd9cc22c11596a419617eff34ff47be, type: 2}
-  tilleSize: 1.5
+  tileSize: 1.5
   yOffset: 0.1
   boardCenter: {x: 0, y: 0, z: 0}
+  deathSize: 0.8
+  deathSpacing: 0.8
+  dragOffset: 1
   prefabs:
   - {fileID: 7033735957116035922, guid: 33216383001dd804181f0454fc48e2b8, type: 3}
   - {fileID: 2271340741376113285, guid: 4f380fb199740d1408018be59f00497d, type: 3}
