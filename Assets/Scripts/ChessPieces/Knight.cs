@@ -8,27 +8,27 @@ public class Knight : ChessPiece
         List<Vector2Int> r = new List<Vector2Int>();
 
         // Top right
-        int x = currentY + 1;
+        int x = currentX + 1;
         int y = currentY + 2;
-        if(x < tileCountX && y< tileCountY) 
-            if (board[x, y] == null || board[x,y].team != team)
+        if (x < tileCountX && y < tileCountY)
+            if (board[x, y] == null || board[x, y].team != team)
                 r.Add(new Vector2Int(x, y));
 
-        x = currentX + 2;
-        y = currentY + 1;
+         x = currentX + 2;
+         y = currentY + 1;
         if (x < tileCountX && y < tileCountY)
             if (board[x, y] == null || board[x, y].team != team)
                 r.Add(new Vector2Int(x, y));
 
         // Top Left
-        x = tileCountX - 1;
-        y = tileCountY + 2;
-        if(x >= 0 && y < tileCountY)
+        x = currentX - 1;
+        y = currentY + 2;
+        if (x >= 0 && y < tileCountY)
             if (board[x, y] == null || board[x, y].team != team)
                 r.Add(new Vector2Int(x, y));
 
-        x = tileCountX - 2;
-        y = tileCountY + 1;
+        x = currentX - 2;
+        y = currentY + 1;
         if (x >= 0 && y < tileCountY)
             if (board[x, y] == null || board[x, y].team != team)
                 r.Add(new Vector2Int(x, y));
