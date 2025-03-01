@@ -1,7 +1,14 @@
 using System;
 using System.Collections.Generic;
-using UnityEditorInternal;
 using UnityEngine;
+
+public enum SpecialMove
+{
+    None = 0,
+    EnPassant,
+    Castling,
+    Promotion,
+}
 public class Chessboard : MonoBehaviour
 {
     [Header("Art stuff")]
@@ -31,6 +38,8 @@ public class Chessboard : MonoBehaviour
     private Vector2Int currentHover;
     private Vector3 bounds;
     private bool isWhiteTurn;
+    private SpecialMove specialMove;
+    private List<Vector2Int[]> moveList = new List<Vector2Int[]>();
 
     private void Awake()
     {
@@ -83,6 +92,9 @@ public class Chessboard : MonoBehaviour
 
                         //Get a list of where i can go, highylighy tiles as well
                         availableMoves = currentlyDragging.GetAvailableMoves(ref chessPieces, TILE_COUNT_X, TILE_COUNT_Y);
+                        //Get a list of special moves as well
+                        specialMove = currentlyDragging.GetSpecialMoves(ref chessPieces, ref moveList, ref availableMoves);
+
                         HighlightTiles();
                     }
                 }
@@ -184,8 +196,8 @@ public class Chessboard : MonoBehaviour
         chessPieces[5, 0] = SpawnSinglePiece(ChessPieceType.Bishop, whiteTeam);
         chessPieces[6, 0] = SpawnSinglePiece(ChessPieceType.Knight, whiteTeam);
         chessPieces[7, 0] = SpawnSinglePiece(ChessPieceType.Rook, whiteTeam);
-       // for (int i = 0; i < TILE_COUNT_X; i++)
-        //    chessPieces[i, 1] = SpawnSinglePiece(ChessPieceType.Pawn, whiteTeam);
+        for (int i = 0; i < TILE_COUNT_X; i++)
+            chessPieces[i, 1] = SpawnSinglePiece(ChessPieceType.Pawn, whiteTeam);
 
         //Black team
         chessPieces[0, 7] = SpawnSinglePiece(ChessPieceType.Rook, blackTeam);
@@ -196,8 +208,8 @@ public class Chessboard : MonoBehaviour
         chessPieces[5, 7] = SpawnSinglePiece(ChessPieceType.Bishop, blackTeam);
         chessPieces[6, 7] = SpawnSinglePiece(ChessPieceType.Knight, blackTeam);
         chessPieces[7, 7] = SpawnSinglePiece(ChessPieceType.Rook, blackTeam);
-        //for (int i = 0; i < TILE_COUNT_X; i++)
-          //  chessPieces[i, 6] = SpawnSinglePiece(ChessPieceType.Pawn, blackTeam);
+        for (int i = 0; i < TILE_COUNT_X; i++)
+            chessPieces[i, 6] = SpawnSinglePiece(ChessPieceType.Pawn, blackTeam);
 
 
     }
@@ -264,7 +276,8 @@ public class Chessboard : MonoBehaviour
 
         //Fields reset
         currentlyDragging = null;
-        availableMoves = new List<Vector2Int>();
+        availableMoves.Clear();
+        moveList.Clear();
 
         // Cleam up
         for (int x = 0; x < TILE_COUNT_X; x++)
@@ -296,9 +309,40 @@ public class Chessboard : MonoBehaviour
         Application.Quit();
     }
 
+    // Special Moves
+    private void ProcessSpecialMove()
+    {
+        if (specialMove == SpecialMove.EnPassant)
+        {
+            var newMove = moveList[moveList.Count - 1];
+            ChessPiece myPawn = chessPieces[newMove[1].x, newMove[1].y];
+            var targetPawnPosition = moveList[moveList.Count - 2];
+            ChessPiece enemyPawn = chessPieces[targetPawnPosition[1].x, targetPawnPosition[1].y];
+
+            if(myPawn.currentX == enemyPawn.currentX)
+            {
+                if(myPawn.currentY == enemyPawn.currentY - 1 || myPawn.currentY == enemyPawn.currentY +1)
+                {
+                    if(enemyPawn.team == 0)
+                    {
+                        deadWhites.Add(enemyPawn);
+                        enemyPawn.SetScale(Vector3.one * deathSize);
+                        enemyPawn.SetPosition(new Vector3(8 * tileSize, yOffset, -1 * tileSize) - bounds + new Vector3(tileSize / 2, 0, tileSize / 2) + (Vector3.forward * deathSpacing) * deadWhites.Count);
+                    }
+                    else
+                    {
+                        deadBlacks.Add(enemyPawn);
+                        enemyPawn.SetScale(Vector3.one * deathSize);
+                        enemyPawn.SetPosition(new Vector3(-1 * tileSize, yOffset, 8 * tileSize) - bounds + new Vector3(tileSize / 2, 0, tileSize / 2) + (Vector3.back * deathSpacing) * deadBlacks.Count);
+                    }
+                    chessPieces[enemyPawn.currentX, enemyPawn.currentY] = null;
+                }
+            }
+        }
+    }
 
     // Operations
-    private bool ContainsValidMove(ref List<Vector2Int> moves, Vector2 pos)
+    private bool ContainsValidMove(ref List<Vector2Int> moves, Vector2Int pos)
     {
         for(int i=0; i<moves.Count;i++)
             if (moves[i].x == pos.x && moves[i].y == pos.y)
@@ -307,7 +351,7 @@ public class Chessboard : MonoBehaviour
     }
     private bool MoveTo(ChessPiece cp, int x, int y)
     {
-        if(!ContainsValidMove(ref availableMoves, new Vector2(x, y)))
+        if(!ContainsValidMove(ref availableMoves, new Vector2Int(x, y)))
             return false;
 
         Vector2Int previousPosition = new Vector2Int(cp.currentX, cp.currentY);
@@ -348,6 +392,9 @@ public class Chessboard : MonoBehaviour
         PositionSinglePiece(x, y);
 
         isWhiteTurn = !isWhiteTurn;
+        moveList.Add(new Vector2Int[] { previousPosition, new Vector2Int(x, y) });
+
+        ProcessSpecialMove();
 
         return true;
     }
